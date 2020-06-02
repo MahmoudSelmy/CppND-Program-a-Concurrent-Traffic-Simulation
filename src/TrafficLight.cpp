@@ -10,7 +10,12 @@ T MessageQueue<T>::receive()
 {
     // FP.5a : The method receive should use std::unique_lock<std::mutex> and _condition.wait() 
     // to wait for and receive new messages and pull them from the queue using move semantics. 
-    // The received object should then be returned by the receive function. 
+    // The received object should then be returned by the receive function.
+    std::unique_lock<std::mutex> uLock(_mutex);
+    _condition.wait(uLock, [this] { return !_queue.empty(); });
+    T msg = std::move(_queue.front());
+    _queue.pop_front();
+    return msg;
 }
 
 template <typename T>
@@ -37,6 +42,26 @@ void TrafficLight::waitForGreen()
     // FP.5b : add the implementation of the method waitForGreen, in which an infinite while-loop 
     // runs and repeatedly calls the receive function on the message queue. 
     // Once it receives TrafficLightPhase::green, the method returns.
+    int waitGreenCycleDuration = 1;
+    std::chrono::time_point<std::chrono::system_clock> start;
+
+    start = std::chrono::system_clock::now();
+    while (true) 
+    {
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::chrono::time_point<std::chrono::system_clock> current = std::chrono::system_clock::now();
+
+        long currentDuration = std::chrono::duration_cast<std::chrono::milliseconds>(current - start).count();
+        if (currentDuration < waitGreenCycleDuration) 
+        {
+            continue;
+        }
+        if (_messageQueue.receive() == TrafficLightPhase::green)
+        {
+            break;
+        }
+    }
 }
 
 TrafficLightPhase TrafficLight::getCurrentPhase()
@@ -102,8 +127,9 @@ void TrafficLight::cycleThroughPhases()
             continue;
         }
         
-        toggleCurrentPhase();
         _messageQueue.send(std::move(_currentPhase));
+        toggleCurrentPhase();
+        
 
         start = std::chrono::system_clock::now();
         cycleDuration = getRandomCycleDuration();
