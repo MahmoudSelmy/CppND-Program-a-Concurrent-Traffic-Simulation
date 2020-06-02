@@ -127,9 +127,8 @@ void TrafficLight::cycleThroughPhases()
             continue;
         }
         
-        _messageQueue.send(std::move(_currentPhase));
         toggleCurrentPhase();
-        
+        _messageQueue.send(std::move(_currentPhase));
 
         start = std::chrono::system_clock::now();
         cycleDuration = getRandomCycleDuration();
