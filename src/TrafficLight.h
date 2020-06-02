@@ -23,7 +23,7 @@ public:
     void send(T &&msg);
 private:
     std::mutex _mutex;
-    std::condition_variable _condtidion;
+    std::condition_variable _condition;
     std::deque<T> _queue;
 };
 
@@ -52,12 +52,14 @@ private:
     void cycleThroughPhases();
     int getRandomCycleDuration();
     void toggleCurrentPhase();
-    // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase 
-    // and use it within the infinite loop to push each new TrafficLightPhase into it by calling 
-    // send in conjunction with move semantics.
+    
     TrafficLightPhase _currentPhase;
     std::condition_variable _condition;
     std::mutex _mutex;
+    // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase 
+    // and use it within the infinite loop to push each new TrafficLightPhase into it by calling 
+    // send in conjunction with move semantics.
+    MessageQueue<TrafficLightPhase> _messageQueue;
 };
 
 #endif
