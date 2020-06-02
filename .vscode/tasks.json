@@ -1,0 +1,47 @@
+{
+	"version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Clean-Build",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}"
+            },
+            "command": "rm",
+            "args": ["-rf", "build"]
+        },
+        {
+            "label": "Create-Build-Directory",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}"
+            },
+            "command": "mkdir",
+            "args": ["build"],
+            "dependsOn":["Clean-Build"]
+        },
+        {
+            "label": "CMake",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}/build"
+            },
+            "command": "cmake",
+            "args": ["-DCMAKE_BUILD_TYPE=Debug", ".."],
+            "dependsOn":["Create-Build-Directory"]
+        },
+        {
+            "label": "Make",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceRoot}/build"
+            },
+            "command": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+			},
+			"dependsOn":["CMake"]
+        }
+     ]
+}
