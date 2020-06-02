@@ -43,14 +43,65 @@ TrafficLightPhase TrafficLight::getCurrentPhase()
 
 void TrafficLight::simulate()
 {
-    // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. To do this, use the thread queue in the base class. 
+    // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method 
+    // „simulate“ is called. To do this, use the thread queue in the base class.
+
+    threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
+}
+
+int TrafficLight::getRandomCycleDuration()
+{
+    // https://stackoverflow.com/a/13445752
+    std::random_device dev;  
+    std::mt19937 rng(dev()); 
+    std::uniform_int_distribution<std::mt19937::result_type> distribution(4000, 6000); 
+    int cycleDuration = distribution(rng); 
+    return cycleDuration;
+}
+
+void TrafficLight::toggleCurrentPhase()
+{
+    if(_currentPhase == TrafficLightPhase::red)
+    {
+        _currentPhase = TrafficLightPhase::green;
+    }
+    else
+    {
+        _currentPhase = TrafficLightPhase::red;
+    }
 }
 
 // virtual function which is executed in a thread
 void TrafficLight::cycleThroughPhases()
 {
-    // FP.2a : Implement the function with an infinite loop that measures the time between two loop cycles 
-    // and toggles the current phase of the traffic light between red and green and sends an update method 
-    // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. 
+    // FP.2a : Implement the function with an infinite loop that 
+    // 1) Measures the time between two loop cycles 
+    // 2) Toggles the current phase of the traffic light between red and green and sends an update method 
+    // to the message queue using move semantics. 
+    // 3) The cycle duration should be a random value between 4000 and 6000 seconds. 
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
+
+    int cycleDuration = getRandomCycleDuration();
+    std::chrono::time_point<std::chrono::system_clock> start;
+
+    start = std::chrono::system_clock::now();
+    
+    while (true) 
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        std::chrono::time_point<std::chrono::system_clock> current = std::chrono::system_clock::now();
+        
+        long duration = std::chrono::duration_cast<std::chrono::milliseconds>(current - start).count();
+        
+        if (duration < cycleDuration) 
+        {
+            continue;
+        }
+        
+        toggleCurrentPhase();
+
+        start = std::chrono::system_clock::now();
+        cycleDuration = getRandomCycleDuration();
+    }
 }
